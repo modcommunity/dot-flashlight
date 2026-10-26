@@ -1,0 +1,4 @@
+# Shipped defaults are in DotFlashlightConfig; a key here overrides one.
+# range_m: 20.0
+# shadows_on_web: false
+# battery: false
