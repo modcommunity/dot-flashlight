@@ -7,7 +7,7 @@ extends Node3D
 ## Counts sections run to their last line and a total of checks, because a script error aborts a section and not the run.
 
 const EXPECTED_SECTIONS := 7
-const EXPECTED_CHECKS := 67
+const EXPECTED_CHECKS := 70
 
 var _passed := 0
 var _failed := 0
@@ -98,6 +98,14 @@ func _state() -> void:
 	fl.config.allowed_maps = PackedStringArray(["x"])
 	fl.begin_map("m", 0.0)
 	_check(not fl.allowed and not fl.on and not fl.toggle(), "a map off the list: no light, no toggle")
+	fl.config.allowed_maps = PackedStringArray()
+	fl.begin_map("m", 0.0)
+	fl.energy_scale = 0.5
+	fl._process(0.1)
+	_check(is_equal_approx(fl.beam.light_energy, fl.config.energy * 0.5), "a game's energy_scale dims the beam")
+	fl.config.range_m = 12.0
+	fl.refresh()
+	_check(fl.beam.spot_range == 12.0, "refresh restyles the beam from a changed config")
 	var h := Node3D.new()
 	add_child(h)
 	var by_ref := DotFlashlight.new()
@@ -202,9 +210,13 @@ func _crowd() -> void:
 		_check(crowd.describe()["shadowed"] == 0, "no shadows on the web by default")
 	else:
 		_check(true, "(platform is not web; web rule covered by local_shadows)")
+	crowd.retain([1, 2, 3])
+	_check(crowd.describe()["tracked"] == 3, "retain keeps only who is still here")
+	crowd.set_lit(0, true)
 	crowd.remove(0)
+	crowd.set_lit(1, true)
 	crowd.rank()
-	_check(crowd.describe()["tracked"] == 119, "a player who left is forgotten")
+	_check(crowd.describe()["tracked"] == 3, "a player removed is forgotten")
 	_sections += 1
 
 

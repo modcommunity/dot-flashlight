@@ -34,6 +34,8 @@ var on: bool = false
 var charge: float = 1.0
 var allowed: bool = true
 var beam: SpotLight3D = null
+## A game's own dimming (a fright, a power cut) multiplies the beam's energy.
+var energy_scale: float = 1.0
 
 var _audio: Object = null
 var _time := 0.0
@@ -60,6 +62,12 @@ func begin_map(map_id: String, ambient: float, mood: String = "") -> void:
 	charge = 1.0
 	_apply(DotFlashlightRules.start_on(config, map_id, ambient, mood), false)
 	DotLog.debug(CHANNEL, "map", {"map": map_id, "allowed": allowed, "on": on})
+
+
+## Re-applies the config to the beam, after a cvar or the server changed it.
+func refresh() -> void:
+	if beam != null:
+		DotFlashlightBeam.style(beam, config, config.local_shadows())
 
 
 ## Flips the light. Returns whether anything was done.
@@ -102,7 +110,7 @@ func _process(delta: float) -> void:
 			_apply(false, true)
 			depleted.emit()
 	if beam != null and on:
-		beam.light_energy = config.energy * DotFlashlightRules.flicker(config, charge, _time)
+		beam.light_energy = config.energy * energy_scale * DotFlashlightRules.flicker(config, charge, _time)
 
 
 func _unhandled_input(event: InputEvent) -> void:

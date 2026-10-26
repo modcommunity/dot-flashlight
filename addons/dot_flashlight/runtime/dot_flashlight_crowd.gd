@@ -52,6 +52,19 @@ func remove(key: Variant) -> void:
 	_origins.erase(key)
 
 
+## Forgets every player not in [param keys].
+func retain(keys: Array) -> void:
+	for key: Variant in _beams.keys():
+		if not keys.has(key):
+			remove(key)
+
+
+## Re-applies the config to every beam.
+func refresh() -> void:
+	for beam: SpotLight3D in _beams.values():
+		DotFlashlightBeam.style(beam, config, false, config.remote_energy_scale)
+
+
 ## Where the viewer is (their camera), for the ranking.
 func set_viewer(at: Vector3) -> void:
 	_viewer = at
