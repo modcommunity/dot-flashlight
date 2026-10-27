@@ -28,6 +28,10 @@ crowd.place(key, player.eye_position(), player.look_direction())
 
 Every number is a `DotFlashlightConfig` field (range, angle, energy, colour, shadows, battery drain and recharge, key, default state, allowed maps, how many other beams are drawn and shadowed). Layers, weakest first: defaults, `cfg/addon/dot_flashlight/*.yml`, the game's, the operator's, `DOT_FLASHLIGHT_*`, `--flashlight-*`. A game that wants cvars and the workbench binds the config with dot-game's `DotGameConfigBinder` (`profile_kind = "flashlight"`), which exposes every field as a cvar and a profile set.
 
+## Switch sounds
+
+Set `audio` (a `DotNodeRef` to a dot-audio `DotAudioManager`) on `DotFlashlight` and on `DotFlashlightCrowd`; the light then clicks in 3D where it is, the crowd where each other player stands. The catalogue needs `flashlight_on` and `flashlight_off`: `DotAudioStock.add_to(catalogue)` or `DotAudioStock.flashlight_defs()` adds the stock ones (synthesised, CC0, 0.12 s, about 7 to 9 dB below a footstep). To replace them, either add your own defs with those ids before the stock is added (`add_to` skips ids already present), or point `click_on` / `click_off` at other catalogue ids. `click_volume` (0 is silent) and `click_pitch_jitter` tune them, and the `clicked(on)` signal is there for a game that plays its own sound. Without `audio`, or with an id the catalogue lacks, the light is silent.
+
 ## Cost
 
 Only the local beam and the nearest `shadow_beams` others cast shadows, only the nearest `remote_beams` inside `remote_range` are drawn, and the ranking runs four times a second. Shadows are off by default in a browser or on a phone (`shadows_on_web`).
