@@ -7,7 +7,7 @@ extends Node3D
 ## Counts sections run to their last line and a total of checks, because a script error aborts a section and not the run.
 
 const EXPECTED_SECTIONS := 7
-const EXPECTED_CHECKS := 70
+const EXPECTED_CHECKS := 76
 
 var _passed := 0
 var _failed := 0
@@ -168,6 +168,33 @@ func _replication() -> void:
 	audio.catalogue.ids.clear()
 	fl.toggle()
 	_check(audio.played == [&"flashlight_on"], "an id the catalogue lacks is not played", str(audio.played))
+	audio.catalogue.ids.append_array([&"flashlight_on", &"flashlight_off"])
+	fl.get_parent().position = Vector3(4, 0, 0)
+	audio.played.clear()
+	audio.calls.clear()
+	fl.toggle()
+	fl.toggle()
+	_check(audio.played == [&"flashlight_on", &"flashlight_off"], "one on and one off, nothing else", str(audio.played))
+	var call: Dictionary = audio.calls[1]
+	_check((call["at"] as Vector3).distance_to(fl.beam.global_position) < 0.01 and absf(float(call["pitch"]) - 1.0) <= fl.config.click_pitch_jitter + 0.0001, "the click is positioned at the beam with bounded pitch jitter", str(call))
+	fl.config.click_volume = 0.0
+	fl.toggle()
+	fl.toggle()
+	_check(audio.played.size() == 2, "a muted flashlight is silent", str(audio.played))
+	fl.config.click_volume = 1.0
+	var crowd := DotFlashlightCrowd.new()
+	crowd.config = fl.config
+	crowd._audio = audio
+	add_child(crowd)
+	crowd.set_lit(7, false)
+	crowd.place(7, Vector3(1, 2, 3), Vector3.FORWARD)
+	_check(audio.played.size() == 2, "a player first seen is silent")
+	crowd.set_lit(7, true)
+	crowd.set_lit(7, true)
+	_check(audio.played.size() == 3 and audio.played[2] == &"flashlight_on" and audio.calls[2]["at"] == Vector3(1, 2, 3), "a remote player's switch is heard once, in 3D where they stand", str(audio.played))
+	crowd.set_lit(7, false)
+	_check(audio.played.size() == 4 and audio.played[3] == &"flashlight_off", "and so is theirs going off")
+	crowd.queue_free()
 	_sections += 1
 
 
@@ -236,8 +263,11 @@ class _FakeAudio extends RefCounted:
 	var played: Array = []
 	var catalogue := _Cat.new()
 
-	func play(id: StringName) -> int:
+	var calls: Array = []
+
+	func play_at(id: StringName, at: Vector3, volume: float = 1.0, pitch: float = 1.0) -> int:
 		played.append(id)
+		calls.append({"at": at, "volume": volume, "pitch": pitch})
 		return 1
 
 

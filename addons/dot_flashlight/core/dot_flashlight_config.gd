@@ -69,6 +69,10 @@ const START_DARK := 2
 ## dot-audio catalogue ids for the switch clicks; empty is silent.
 @export var click_on: String = "flashlight_on"
 @export var click_off: String = "flashlight_off"
+## Loudness of a click, 0 to 1; 0 is a silent light. The stock clicks are already quieter than a footstep.
+@export_range(0.0, 1.0, 0.01) var click_volume: float = 1.0
+## Random pitch spread (plus or minus) so repeated clicks do not repeat exactly.
+@export_range(0.0, 0.3, 0.01) var click_pitch_jitter: float = 0.04
 
 
 func env_prefix() -> String:

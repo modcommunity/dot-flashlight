@@ -8,12 +8,15 @@ extends Node3D
 @export var config: DotFlashlightConfig
 ## How often the nearest beams are ranked, in seconds.
 @export var rank_interval: float = 0.25
+## Optional dot-audio manager: another player's switch is heard in 3D where they stand.
+@export var audio: DotNodeRef
 
 var _beams: Dictionary = {}
 var _lit: Dictionary = {}
 var _origins: Dictionary = {}
 var _viewer := Vector3.ZERO
 var _left := 0.0
+var _audio: Object = null
 var _shadow_count := 0
 var _drawn_count := 0
 
@@ -21,10 +24,14 @@ var _drawn_count := 0
 func _ready() -> void:
 	if config == null:
 		config = DotFlashlightConfig.new()
+	if audio != null:
+		_audio = audio.resolve_or_null(self, "flashlight")
 
 
-## Who is lit. A player never seen is created on first call.
+## Who is lit. A player never seen is created on first call. A change in a player already known clicks at their last placed origin; the first sighting is silent, so joining a server does not click for everyone.
 func set_lit(key: Variant, lit: bool) -> void:
+	if _lit.has(key) and bool(_lit[key]) != lit:
+		DotFlashlightClick.play(_audio, config, lit, _origins.get(key, Vector3.ZERO))
 	_lit[key] = lit
 	if lit and not _beams.has(key):
 		var beam := DotFlashlightBeam.make(config, false, config.remote_energy_scale)

@@ -19,7 +19,7 @@ const CHANNEL := "flashlight"
 @export var config: DotFlashlightConfig
 ## The eye or camera the beam is mounted on; empty is this node's parent.
 @export var host: DotNodeRef
-## Optional dot-audio manager for the switch clicks.
+## Optional dot-audio manager for the switch clicks, played in 3D at the beam.
 @export var audio: DotNodeRef
 ## Input action that toggles; created from `config.key` only if the project has no such action.
 @export var action: StringName = &"flashlight"
@@ -131,13 +131,8 @@ func _apply(next: bool, click: bool) -> void:
 
 func _click(now_on: bool) -> void:
 	clicked.emit(now_on)
-	var id := StringName(config.click_on if now_on else config.click_off)
-	if _audio == null or id == &"" or not _audio.has_method("play"):
-		return
-	var catalogue: Variant = _audio.get("catalogue")
-	if catalogue != null and (catalogue as Object).has_method("has") and not catalogue.has(id):
-		return
-	_audio.call("play", id)
+	var at := beam.global_position if beam != null and beam.is_inside_tree() else Vector3.ZERO
+	DotFlashlightClick.play(_audio, config, now_on, at)
 
 
 func _ensure_action() -> void:
