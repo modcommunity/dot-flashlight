@@ -84,26 +84,32 @@ func _process(delta: float) -> void:
 		rank()
 
 
+# Reused by rank() so a frame allocates no containers.
+var _rank_keys: Array = []
+var _rank_dist := PackedFloat32Array()
+var _rank_visible := {}
+
+
 ## Ranks the lit beams by distance now: shows the nearest `remote_beams` inside `remote_range`, gives shadows to the nearest `shadow_beams`.
 func rank() -> void:
-	var keys: Array = []
-	var dist := PackedFloat32Array()
+	_rank_keys.clear()
+	_rank_dist.clear()
 	for key: Variant in _beams:
 		if bool(_lit.get(key, false)) and _origins.has(key):
 			var d := _viewer.distance_to(_origins[key] as Vector3)
 			if d <= config.remote_range:
-				keys.append(key)
-				dist.append(d)
-	var shown := DotFlashlightRules.nearest(dist, config.remote_beams)
-	var shadowed := DotFlashlightRules.nearest(dist, config.shadow_beams) if config.local_shadows() else PackedInt32Array()
-	var visible_keys := {}
+				_rank_keys.append(key)
+				_rank_dist.append(d)
+	var shown := DotFlashlightRules.nearest(_rank_dist, config.remote_beams)
+	var shadowed := DotFlashlightRules.nearest(_rank_dist, config.shadow_beams) if config.local_shadows() else PackedInt32Array()
+	_rank_visible.clear()
 	for i in shown:
-		var beam: SpotLight3D = _beams[keys[i]]
-		visible_keys[keys[i]] = true
+		var beam: SpotLight3D = _beams[_rank_keys[i]]
+		_rank_visible[_rank_keys[i]] = true
 		beam.visible = true
 		beam.shadow_enabled = shadowed.has(i)
 	for key: Variant in _beams:
-		if not visible_keys.has(key):
+		if not _rank_visible.has(key):
 			(_beams[key] as SpotLight3D).visible = false
 			(_beams[key] as SpotLight3D).shadow_enabled = false
 	_drawn_count = shown.size()
