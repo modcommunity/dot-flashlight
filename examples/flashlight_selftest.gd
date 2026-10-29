@@ -1,10 +1,8 @@
 extends Node3D
 
-## dot-flashlight's headless suite.
-##
-##     godot --headless --path . res://examples/flashlight_selftest.tscn
-##
-## Counts sections run to their last line and a total of checks, because a script error aborts a section and not the run.
+## dot-flashlight's headless suite (res://examples/flashlight_selftest.tscn).
+## Counts sections run to their last line as well as checks, because a script error
+## aborts a section and not the run.
 
 const EXPECTED_SECTIONS := 7
 const EXPECTED_CHECKS := 76
