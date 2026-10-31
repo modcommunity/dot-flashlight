@@ -27,8 +27,8 @@ const CHANNEL := "flashlight"
 @export var handle_input: bool = true
 ## Whether this process owns the state.
 @export var authoritative: bool = true
-## Where the beam sits on the host.
-@export var beam_offset: Vector3 = Vector3(0.2, -0.15, 0.0)
+## Where the beam sits on the host: just above the eye, as if worn on the head, so a held weapon is not between the light and the world.
+@export var beam_offset: Vector3 = Vector3(0.0, 0.05, 0.0)
 
 var on: bool = false
 var charge: float = 1.0
