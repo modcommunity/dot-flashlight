@@ -98,6 +98,38 @@ func local_shadows() -> bool:
 	return shadows and (shadows_on_web or not (DotPlatform.is_web() or DotPlatform.is_mobile()))
 
 
+## The `flashlight` profile schema (the shape of dot-profile's field()), read from the exports so it cannot drift; dot-profile's profile_check finds it here.
+static func schema() -> Array:
+	var out: Array = []
+	var cfg := DotFlashlightConfig.new()
+	for prop: Dictionary in cfg.get_property_list():
+		if not (int(prop["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE) or not (int(prop["usage"]) & PROPERTY_USAGE_EDITOR):
+			continue
+		var type := ""
+		match int(prop["type"]):
+			TYPE_BOOL: type = "bool"
+			TYPE_INT: type = "int"
+			TYPE_FLOAT: type = "float"
+			TYPE_STRING: type = "string"
+			TYPE_PACKED_STRING_ARRAY: type = "list"
+		if type == "":
+			continue
+		var key := str(prop["name"])
+		var def: Variant = cfg.get(key)
+		var f := {"name": key, "type": type, "default": Array(def) if def is PackedStringArray else def}
+		if int(prop["hint"]) == PROPERTY_HINT_RANGE and type != "string":
+			var parts := str(prop["hint_string"]).split(",")
+			f["min"] = parts[0].to_int() if type == "int" else parts[0].to_float()
+			f["max"] = parts[1].to_int() if type == "int" else parts[1].to_float()
+		out.append(f)
+	return out
+
+
+## Kind to schema for dot-profile's profile_check (a game's `cfg/game/<game>/flashlight/game.yml`).
+static func profile_schemas() -> Dictionary:
+	return {"flashlight": {"schema": schema(), "children": {}}}
+
+
 ## Defaults, then `cfg/addon/dot_flashlight/*.yml` and the game tier, then environment and command line.
 static func from_files() -> DotResult:
 	var cfg := DotFlashlightConfig.new()

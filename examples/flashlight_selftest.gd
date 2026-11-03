@@ -5,7 +5,7 @@ extends Node3D
 ## aborts a section and not the run.
 
 const EXPECTED_SECTIONS := 7
-const EXPECTED_CHECKS := 76
+const EXPECTED_CHECKS := 79
 
 var _passed := 0
 var _failed := 0
@@ -31,6 +31,12 @@ func _ready() -> void:
 func _config() -> void:
 	var c := DotFlashlightConfig.new()
 	_check(c.validate().ok, "defaults validate")
+	var fs: Array = DotFlashlightConfig.profile_schemas()["flashlight"]["schema"]
+	var names: Array = fs.map(func(f: Dictionary) -> Variant: return f["name"])
+	_check(names.has("range_m") and names.has("allowed_maps") and names.size() == c.config_keys().size(), "profile_check finds the flashlight kind with every key", str(names.size()))
+	var rng: Dictionary = fs[names.find("range_m")]
+	_check(rng["type"] == "float" and rng["max"] == 80.0 and rng["default"] == 20.0, "a range export carries its bounds")
+	_check(fs[names.find("allowed_maps")]["type"] == "list", "a string array is a list")
 	_check(c.config_keys().size() >= 24, "every tunable is a config key", str(c.config_keys().size()))
 	for k in ["range_m", "angle", "energy", "colour", "shadows", "shadows_on_web", "shadow_beams", "battery", "battery_seconds", "recharge_seconds", "key", "default_state", "allowed_maps", "remote_beams"]:
 		_check(c.has_key(k), "key %s exists" % k)
